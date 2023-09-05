@@ -4,7 +4,7 @@
 import { ConnectionStatus, SoundcraftUI } from 'soundcraft-ui-connection';
 import { Actions } from './app/actions';
 
-console.log('UI MIDI Control v1.0.0');
+console.log('UI MIDI XTouch v1.0.0');
 
 const mixerIP = '10.10.1.1';
 const controller = 'X-TOUCH COMPACT';
