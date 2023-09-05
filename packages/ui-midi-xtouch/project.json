@@ -1,0 +1,52 @@
+{
+  "$schema": "..\\..\\node_modules\\nx\\schemas\\project-schema.json",
+  "sourceRoot": "packages/ui-midi-xtouch/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/node:webpack",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/ui-midi-xtouch",
+        "main": "packages/ui-midi-xtouch/src/main.ts",
+        "tsConfig": "packages/ui-midi-xtouch/tsconfig.app.json",
+        "assets": ["packages/ui-midi-xtouch/src/assets"]
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "extractLicenses": true,
+          "inspect": false,
+          "fileReplacements": [
+            {
+              "replace": "packages/ui-midi-xtouch/src/environments/environment.ts",
+              "with": "packages/ui-midi-xtouch/src/environments/environment.prod.ts"
+            }
+          ]
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/node:node",
+      "options": {
+        "buildTarget": "ui-midi-xtouch:build"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/ui-midi-xtouch/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/packages/ui-midi-xtouch"],
+      "options": {
+        "jestConfig": "packages/ui-midi-xtouch/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}

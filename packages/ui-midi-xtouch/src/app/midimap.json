@@ -1,0 +1,36 @@
+{
+  "pitch": {
+    "pitch_start": 0,
+    "pitch_end": 7
+  },
+  "noteon": {
+    "pagedown": 84,
+    "pageup": 85,
+    "mute_start": 24,
+    "mute_end": 31,
+    "solo_start": 16,
+    "solo_end": 23,
+    "center_start": 32,
+    "center_end": 39,
+    "aux_start": 8,
+    "aux_end": 15,
+    "fx_start": 40,
+    "fx_end": 43,
+    "mutegr1": 91,
+    "mutegr2": 92,
+    "mutegr3": 86,
+    "mutegr4": 95,
+    "mutegr5": 93,
+    "mutegr6": 94
+  },
+  "cc": {
+    "pan_start": 16,
+    "pan_end": 23,
+    "led_start": 48,
+    "led_end": 55
+  },
+  "page": {
+    "page_start": 0,
+    "page_end": 7
+  }
+}

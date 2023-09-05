@@ -1,0 +1,7 @@
+{
+  "$schema": "./node_modules/nx/schemas/workspace-schema.json",
+  "version": 2,
+  "projects": {
+    "ui-midi-xtouch": "packages/ui-midi-xtouch"
+  }
+}
