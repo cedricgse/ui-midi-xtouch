@@ -6,8 +6,10 @@ import { Actions } from './app/actions';
 
 console.log('UI MIDI XTouch v1.0.0');
 
-const mixerIP = '10.10.1.1';
-const controller = 'X-TOUCH COMPACT';
+var config = require('./config.json');
+
+const mixerIP = config.mixerIP;
+const controller = config.controllerName;
 
 export const easymidi = require('easymidi');
 const soundcraft = new SoundcraftUI(mixerIP);
@@ -42,12 +44,14 @@ if (!easymidi.input || !easymidi.output) {
   process.exit();
 }
 
-export var actions = new Actions(easymidi, soundcraft);
+export var actions = new Actions(easymidi, soundcraft, config);
 
 soundcraft.status$.subscribe((status) => {
   console.log('Connection status', status.type);
   if (status.type == ConnectionStatus.Error) soundcraft.reconnect();
 });
+
+soundcraft.conn.inbound$.subscribe((inbound) => actions.showSelect(inbound));
 
 console.log('Connecting to', mixerIP);
 soundcraft.connect();

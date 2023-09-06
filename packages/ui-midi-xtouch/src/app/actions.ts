@@ -2,10 +2,11 @@ import { SubscrIndex } from './subscrindex';
 import { Feedback_Type } from './subscrindex';
 
 const debug = false; //holds fader positions directly, not from ui
-var easymidi, soundcraft, midiMap;
+var easymidi, soundcraft, midiMap, config;
 var page = 0,
   channel,
-  current_aux = 0;
+  current_aux = 0,
+  current_selected = 0;
 /*  page    channel
     0       Input 1-8
     1       Input 9-16
@@ -43,9 +44,10 @@ var subscr_fader: SubscrIndex[] = [],
 var current_pan: number[] = new Array(8);
 
 export class Actions {
-  constructor(midi, ui) {
+  constructor(midi, ui, pConfig) {
     easymidi = midi;
     soundcraft = ui;
+    config = pConfig
     midiMap = require('./midimap.json');
     this.init();
   }
@@ -85,6 +87,14 @@ export class Actions {
       channel = 1 + page * 8 + (args.note - midiMap.noteon.solo_start);
       if (!this.getChannel(channel, false)) return;
       this.getChannel(channel, false).toggleSolo();
+      return;
+    } else if (
+      args.note >= midiMap.noteon.select_start &&
+      args.note <= midiMap.noteon.select_end
+    ) {
+      //Select
+      channel = 1+ page * 8 + (args.note - midiMap.noteon.select_start);
+      this.selectChannel(channel);
       return;
     } else if (
       args.note >= midiMap.noteon.center_start &&
@@ -201,6 +211,7 @@ export class Actions {
       channel: 0,
     });
     this.refresh_feedback(false);
+    this.feedbackSelectedChannel();
   }
 
   /*
@@ -586,4 +597,78 @@ export class Actions {
   setCurrentPan(pChannel, pValue) {
     current_pan[pChannel - midiMap.cc.led_start] = pValue;
   }
+
+  selectChannel(channel)
+  {
+    var channelSelect = 255;
+    if (channel >= channel_begin && channel <= channel_end) {
+      channelSelect = channel - channel_begin;
+    } else if (channel == line_l) {
+      channelSelect = 24;
+    } else if (channel == line_r) {
+      channelSelect = 25;
+    } else if (channel == player_l) {
+      channelSelect = 26;
+    } else if (channel == player_r) {
+      channelSelect = 27;
+    } else if (channel >= sub_begin && channel <= sub_end) {
+      channelSelect = 32 + channel - sub_begin;
+    } else if (channel >= fx_begin && channel <= fx_end) {
+      channelSelect = 28 + channel - fx_begin;
+    } else if (channel >= vca_begin && channel <= vca_end) {
+      channelSelect = 48 + channel - vca_begin;
+    } else if (channel >= aux_begin && channel <= aux_end) {
+      channelSelect = 38 + channel - aux_begin;
+    }
+    if(channelSelect == 255) return;
+    current_selected = channel;
+    var message = 'BMSG^SYNC^' + config.sync_ID + '^' + channelSelect; 
+    if(debug) console.log(message);
+    soundcraft.conn.sendMessage(message);
+    this.feedbackSelectedChannel();
+  }
+
+  showSelect(inboundMessage:string)
+  {
+    if(inboundMessage.startsWith("BMSG^SYNC^" + config.sync_ID))
+    {
+      var receivedChannel = +inboundMessage.slice(11 + config.sync_ID.length);
+      if (receivedChannel >= 0 && receivedChannel < 24) current_selected = channel_begin + receivedChannel;
+      else if (receivedChannel == 24) current_selected = line_l;
+      else if (receivedChannel == 25) current_selected = line_r;
+      else if (receivedChannel == 26) current_selected = player_l;
+      else if (receivedChannel == 27) current_selected = player_r;
+      else if (receivedChannel >= 32 && receivedChannel < 38) current_selected = sub_begin + receivedChannel - 32;
+      else if (receivedChannel >= 28 && receivedChannel < 32) current_selected = fx_begin + receivedChannel - 28;
+      else if (receivedChannel >= 38 && receivedChannel < 48) current_selected = aux_begin + receivedChannel - 38;
+      else if (receivedChannel >= 48 && receivedChannel < 54) current_selected = vca_begin + receivedChannel - 48;
+      else current_selected = -1; //Master Channel
+      this.feedbackSelectedChannel();
+      if(debug) console.log("Select: " + current_selected);
+    }
+  }
+
+  feedbackSelectedChannel()
+  {
+    for (
+      var i = 0;
+      i <= midiMap.noteon.select_end - midiMap.noteon.select_start;
+      i++
+    ) {
+      easymidi.output.send('noteon', {
+        channel: 0,
+        note: i + midiMap.noteon.select_start,
+        velocity: 0,
+      });
+    }
+    if(current_selected > page*8 && current_selected <= (page+1)*8)
+    {
+      easymidi.output.send('noteon', {
+        channel: 0,
+        note: current_selected - 1 - page*8 + midiMap.noteon.select_start,
+        velocity: 127,
+      });
+    }
+  }
+
 }
