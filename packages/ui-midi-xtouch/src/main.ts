@@ -78,10 +78,10 @@ easymidi.input.on('pitch', (args) => {
   if(pitchProcess || args.value == 0 || args.value >= 16000){
     actions.pitchChange(args);
     pitchProcess = false;
+    setTimeout(() => {
+      pitchProcess = true;
+    }, pitchInterval)
   }
-  setTimeout(() => {
-    pitchProcess = true;
-  }, pitchInterval)
 });
 //easymidi.input.on('position', (args) => console.log('position', args));
 //easymidi.input.on('mtc', (args) => console.log('mtc', args));
