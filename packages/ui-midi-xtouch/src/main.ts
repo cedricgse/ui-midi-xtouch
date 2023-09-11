@@ -55,17 +55,21 @@ soundcraft.status$.subscribe((status) => {
   if (status.type == ConnectionStatus.Error) soundcraft.reconnect();
 });
 
-soundcraft.conn.inbound$.subscribe((inbound) => actions.showSelect(inbound));
+soundcraft.conn.inbound$.subscribe((inbound) => {
+  if(inbound.startsWith("BMSG^SYNC^" + config.sync_ID)){
+    actions.showSelect(inbound)
+  }
+});
 
 console.log('Connecting to', mixerIP);
 soundcraft.connect();
 
 easymidi.input.on('noteon', (args) => actions.noteOn(args));
-easymidi.input.on('poly aftertouch', (args) =>
-  console.log('poly aftertouch', args)
-);
+//easymidi.input.on('poly aftertouch', (args) =>
+//  console.log('poly aftertouch', args)
+//);
 easymidi.input.on('cc', (args) => actions.ccChange(args));
-easymidi.input.on('program', (args) => console.log('program', args));
+//easymidi.input.on('program', (args) => console.log('program', args));
 easymidi.input.on('channel aftertouch', (args) =>
   console.log('channel aftertouch', args)
 );
@@ -79,8 +83,7 @@ easymidi.input.on('pitch', (args) => {
     pitchProcess = true;
   }, pitchInterval)
 });
-//easymidi.input.on('pitch', (args) => actions.pitchChange(args));
-easymidi.input.on('position', (args) => console.log('position', args));
-easymidi.input.on('mtc', (args) => console.log('mtc', args));
-easymidi.input.on('select', (args) => console.log('select', args));
-easymidi.input.on('sysex', (args) => console.log('sysex', args));
+//easymidi.input.on('position', (args) => console.log('position', args));
+//easymidi.input.on('mtc', (args) => console.log('mtc', args));
+//easymidi.input.on('select', (args) => console.log('select', args));
+//easymidi.input.on('sysex', (args) => console.log('sysex', args));

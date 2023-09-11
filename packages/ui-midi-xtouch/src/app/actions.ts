@@ -2,6 +2,7 @@ import { SubscrIndex } from './subscrindex';
 import { Feedback_Type } from './subscrindex';
 
 const debug = false; //holds fader positions directly, not from ui
+const solo_active = false; //Solo on x-Touch now select
 var easymidi, soundcraft, midiMap, config;
 var page = 0,
   channel,
@@ -422,15 +423,17 @@ export class Actions {
           i + midiMap.noteon.mute_start,
           Feedback_Type.fbMute
         );
-      for (
-        var i = 0;
-        i <= midiMap.noteon.solo_end - midiMap.noteon.solo_start;
-        i++, channel++
-      )
-        subscr_solo[i] = new SubscrIndex(
-          i + midiMap.noteon.solo_start,
-          Feedback_Type.fbSolo
-        );
+      if(solo_active){
+        for (
+          var i = 0;
+          i <= midiMap.noteon.solo_end - midiMap.noteon.solo_start;
+          i++, channel++
+        )
+          subscr_solo[i] = new SubscrIndex(
+            i + midiMap.noteon.solo_start,
+            Feedback_Type.fbSolo
+          );
+      }
       for (
         var i = 0;
         i <= midiMap.cc.pan_end - midiMap.cc.pan_start;
@@ -448,8 +451,10 @@ export class Actions {
         for (var i = 0; i < subscr_mute.length; i++) {
           subscr_mute[i].unsubscribe();
         }
-        for (var i = 0; i < subscr_solo.length; i++) {
-          subscr_solo[i].unsubscribe();
+        if(solo_active){
+          for (var i = 0; i < subscr_solo.length; i++) {
+            subscr_solo[i].unsubscribe();
+          }
         }
         for (var i = 0; i < subscr_pan.length; i++) {
           //subscr_pan[i].unsubscribe();
@@ -491,21 +496,24 @@ export class Actions {
         subscr_mute[i].setSubscription(this.getChannel(channel, false));
       }
       //SOLO
-      channel = 1 + page * 8;
-      for (
-        var i = 0;
-        i <= midiMap.noteon.solo_end - midiMap.noteon.solo_start;
-        i++, channel++
-      ) {
-        if (!this.getChannel(channel, false)) {
-          easymidi.output.send('noteon', {
-            channel: 0,
-            note: i + midiMap.noteon.solo_start,
-            velocity: 0,
-          });
-          continue;
+      if(solo_active)
+      {
+        channel = 1 + page * 8;
+        for (
+          var i = 0;
+          i <= midiMap.noteon.solo_end - midiMap.noteon.solo_start;
+          i++, channel++
+        ) {
+          if (!this.getChannel(channel, false)) {
+            easymidi.output.send('noteon', {
+              channel: 0,
+              note: i + midiMap.noteon.solo_start,
+              velocity: 0,
+            });
+            continue;
+          }
+          subscr_solo[i].setSubscription(this.getChannel(channel, false));
         }
-        subscr_solo[i].setSubscription(this.getChannel(channel, false));
       }
       //PAN
       channel = 1 + page * 8;
@@ -630,8 +638,6 @@ export class Actions {
 
   showSelect(inboundMessage:string)
   {
-    if(inboundMessage.startsWith("BMSG^SYNC^" + config.sync_ID))
-    {
       var receivedChannel = +inboundMessage.slice(11 + config.sync_ID.length);
       if (receivedChannel >= 0 && receivedChannel < 24) current_selected = channel_begin + receivedChannel;
       else if (receivedChannel == 24) current_selected = line_l;
@@ -645,7 +651,6 @@ export class Actions {
       else current_selected = -1; //Master Channel
       this.feedbackSelectedChannel();
       if(debug) console.log("Select: " + current_selected);
-    }
   }
 
   feedbackSelectedChannel()
