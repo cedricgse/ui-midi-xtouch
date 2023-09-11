@@ -20,6 +20,10 @@ var outputs = easymidi.getOutputs();
 console.log('Inputs found:', inputs);
 console.log('Outputs found:', outputs);
 
+//avoid pitch flooding
+const pitchInterval = config.pitchInterval;
+let pitchProcess = true;
+
 var i;
 var tinput, toutput;
 for (i = 0, tinput = null; (tinput = inputs[i++]); ) {
@@ -65,7 +69,17 @@ easymidi.input.on('program', (args) => console.log('program', args));
 easymidi.input.on('channel aftertouch', (args) =>
   console.log('channel aftertouch', args)
 );
-easymidi.input.on('pitch', (args) => actions.pitchChange(args));
+easymidi.input.on('pitch', (args) => {
+  //only process every x millisecons to prevent flooding on slower systems or when faders are at extreme positions
+  if(pitchProcess || args.value == 0 || args.value >= 16000){
+    actions.pitchChange(args);
+    pitchProcess = false;
+  }
+  setTimeout(() => {
+    pitchProcess = true;
+  }, pitchInterval)
+});
+//easymidi.input.on('pitch', (args) => actions.pitchChange(args));
 easymidi.input.on('position', (args) => console.log('position', args));
 easymidi.input.on('mtc', (args) => console.log('mtc', args));
 easymidi.input.on('select', (args) => console.log('select', args));
